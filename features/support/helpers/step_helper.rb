@@ -15,3 +15,11 @@ def find_user_id(users_information:, user_login:)
 
   users_id.first
 end
+
+
+
+def clear_tmp
+  dir = "#{Dir.pwd}/features/tmp"
+  FileUtils.rm_r(dir) if Dir.exist?(dir)
+  FileUtils.mkdir dir
+end

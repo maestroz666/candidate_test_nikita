@@ -2,15 +2,15 @@
 
 When(/^получаю информацию о пользователях$/) do
   users_full_information = $rest_wrap.get('/users')
-
   $logger.info('Информация о пользователях получена')
   @scenario_data.users_full_info = users_full_information
 end
 
 When(/^проверяю (наличие|отсутствие) логина (\w+\.\w+) в списке пользователей$/) do |presence, login|
-  search_login_in_list = true
-  presence == 'отсутствие' ? search_login_in_list = !search_login_in_list : search_login_in_list
-
+  search_login_in_list = presence == 'отсутствие' ? false : true
+  # puts presence
+  # presence == 'отсутствие' ? search_login_in_list = !search_login_in_list : search_login_in_list
+  # puts search_login_in_list
   logins_from_site = @scenario_data.users_full_info.map { |f| f.try(:[], 'login') }
   login_presents = logins_from_site.include?(login)
 
@@ -21,6 +21,14 @@ When(/^проверяю (наличие|отсутствие) логина (\w+\
     message = "Логин #{login} отсутствует в списке пользователей"
     search_login_in_list ? raise(message) : $logger.info(message)
   end
+end
+
+# When(/^проверяю отсутствие несуществующего логина {word}.{word} в списке пользователей$/) do |login|
+
+# end
+
+When('проверяю отсутствие несуществующего логина {word}.{word} в списке пользователей') do |login|
+
 end
 
 When(/^добавляю пользователя c логином (\w+\.\w+) именем (\w+) фамилией (\w+) паролем ([\d\w@!#]+)$/) do
@@ -55,3 +63,34 @@ When(/^нахожу пользователя с логином (\w+\.\w+)$/) do 
 
   $logger.info("Найден пользователь #{login} с id:#{@scenario_data.users_id[login]}")
 end
+
+When(/^удаляю пользователя с логином (\w+\.\w+) из списка пользователей$/) do |login|
+  step %(получаю информацию о пользователях)
+  logins_from_site = @scenario_data.users_full_info.map { |f| f.try(:[], 'login') }
+  login_presents = logins_from_site.include?(login)
+
+  if login_presents
+    message = "Логин #{login} присутствует в списке пользователей"
+    $logger.info(message)
+    user_data = @scenario_data.users_full_info.find { |user| user['login'] == login }
+    user_id = user_data['id']
+    response = $rest_wrap.delete("/users/#{user_id}")
+    $logger.info(response.inspect)
+  # else
+  #   message = "Логин #{login} отсутствует в списке пользователей"
+  #   $logger.info(message)
+  end
+end
+
+When(/^изменяю у пользователя с логином (\w+\.\w+) имя фамилию пароль логин$/) do |login|
+  user_data = @scenario_data.users_full_info.find { |user| user['login'] == login }
+  user_id = user_data['id']
+  # puts user_id
+  response = $rest_wrap.put("/users/#{user_id}", login: "QA.testing",
+                            name: 'leon',
+                            surname: 'kennedy',
+                            password: 'Qwerty123123',
+                            active: 0)
+  $logger.info(response.inspect)
+end
+
