@@ -17,10 +17,25 @@ end
 When(/^скачиваю последний стабильный релиз$/) do
   link_first = find("//li[strong[contains(text(), 'Стабильные релизы:')]]//ul//li[1]//a")
   link_first.click
+  sleep 1
   $logger.info("Скачивание файла началось")
-  sleep 7
+  timeout = 0
+  max_timeout = 20
+  while timeout < max_timeout
+    if file_name == file_without_extname
+      $logger.info("Файл скачивается...")
+      timeout +=1
+      sleep 1
+    elsif  file_name != file_without_extname
+      $logger.info("Скачивание завершено")
+      break
+    end
+  end
+  if timeout >= max_timeout
+  raise("Ошибка при скачивании файла")
+  end
 end
-# страница загрузки, проверка что файл начал скичаваться, и она закончилась
+
 When(/^проверяю что скаченный файл находится в нужной директории$/) do
   data_file.length < 1? raise("Папка загрузки пуста"): $logger.info("Папка загрузки не пуста")
   if File.exist?("#{download_path}")
@@ -30,12 +45,11 @@ When(/^проверяю что скаченный файл находится в
     raise message
   end
 end
-# проверять что скачался именно тот. и пропало расширение .crdownload
+
 When(/^проверяю что имя скаченного файла совпадает с именем файла-установщика указанного на сайте$/) do
   download_link = find("//li[strong[contains(text(), 'Стабильные релизы:')]]//ul//li[1]//a")
   href = download_link['href']
   name_release = File.basename(href, '.tar.gz')
-
   if name_release == file_without_extname
     $logger.info("Имя скаченного файла совпадает с именем на сайте")
   else

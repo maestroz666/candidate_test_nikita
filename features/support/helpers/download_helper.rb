@@ -5,7 +5,7 @@
     Dir.glob(download_path + '/*')
   end
   def file_path
-    data_file.first
+    data_file.last
   end
   def file_name
     File.basename(file_path)
