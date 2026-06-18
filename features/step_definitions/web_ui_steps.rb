@@ -2,47 +2,55 @@
 
 When(/^захожу на страницу "(.+?)"$/) do |url|
   visit url
-  $logger.info("Страница #{url} открыта")
-  sleep 1
+  wait_loading_page
+  $logger.info("Страница #{url} загружена")
 end
 
 When(/^кликаю по кнопке с текстом "(.*?)"$/) do |button|
   link_first = find("//div[@id='page']//div//section//div[@data-hero-layer]//a['#{button}']")
   link_first.click
+  wait_loading_page
   current_url = page.current_url
   $logger.info("Переход на страницу #{current_url} осуществлен")
-  sleep 1
 end
 
 When(/^скачиваю последний стабильный релиз$/) do
   link_first = find("//li[strong[contains(text(), 'Стабильные релизы:')]]//ul//li[1]//a")
   link_first.click
-  sleep 1
-  $logger.info("Скачивание файла началось")
-  timeout = 0
-  max_timeout = 20
-  while timeout < max_timeout
-    if file_name == file_without_extname
-      $logger.info("Файл скачивается...")
-      timeout +=1
+  $logger.info("Ожидаю начало загрузки")
+  timeout_first = 1
+  max_timeout_first = 10
+  while timeout_first < max_timeout_first
+    if data_file.length < 1
+      timeout_first +=1
       sleep 1
-    elsif  file_name != file_without_extname
-      $logger.info("Скачивание завершено")
+    else
+      $logger.info("Загрузка началась")
       break
     end
   end
-  if timeout >= max_timeout
-  raise("Ошибка при скачивании файла")
+  $logger.info("Файл загружается...")
+  timeout = 1
+  max_timeout = 20
+  while timeout < max_timeout
+    if file_name == file_without_extname
+      timeout +=1
+      sleep 1
+    elsif  file_name != file_without_extname
+      $logger.info("Файл #{file_name} загружен")
+      break
+    end
+  end
+  if timeout >= max_timeout || timeout_first >= max_timeout_first
+  raise("Ошибка при загрузке файла")
   end
 end
 
 When(/^проверяю что скаченный файл находится в нужной директории$/) do
-  data_file.length < 1? raise("Папка загрузки пуста"): $logger.info("Папка загрузки не пуста")
   if File.exist?("#{download_path}")
     $logger.info("Файл находится по пути #{download_path}")
   else
-    message = "Файл не найден"
-    raise message
+    raise("Файл не найден")
   end
 end
 
@@ -51,8 +59,8 @@ When(/^проверяю что имя скаченного файла совпа
   href = download_link['href']
   name_release = File.basename(href, '.tar.gz')
   if name_release == file_without_extname
-    $logger.info("Имя скаченного файла совпадает с именем на сайте")
+    $logger.info("Имя загруженного файла #{file_without_extname} совпадает с именем на сайте #{name_release}")
   else
-    raise "Имя скаченного файла не совпадает с именем на сайте"
+    raise("Имя загруженного файла #{file_without_extname} не совпадает с именем на сайте #{name_release}")
   end
 end
