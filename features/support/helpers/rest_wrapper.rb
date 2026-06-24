@@ -16,6 +16,7 @@ class RestWrapper
                                            password: password,
                                            accept: 'application/json',
                                            headers: { content_type: 'application/json' }
+    success_response(response, method: :get)
     JSON.parse(response)
   rescue StandardError => e
     send_error e
@@ -28,7 +29,7 @@ class RestWrapper
                                            password: password,
                                            payload: params.to_json,
                                            headers: { content_type: 'application/json' }
-    JSON.parse(response)
+    success_response(response, method: :post)
   rescue StandardError => e
     send_error e
   end
@@ -40,6 +41,7 @@ class RestWrapper
                                            password: password,
                                            payload: params.to_json,
                                            headers: { content_type: 'application/json' }
+    success_response(response, method: :put)
     JSON.parse(response)
   rescue StandardError => e
     send_error e
@@ -52,6 +54,7 @@ class RestWrapper
                                            password: password,
                                            payload: params.to_json,
                                            headers: { content_type: 'application/json' }
+    success_response(response, method: :delete)
     JSON.parse(response)
   rescue StandardError => e
     send_error e
@@ -60,17 +63,18 @@ class RestWrapper
   private
 
   def send_error(exception)
-    puts exception.inspect
     body = exception.response.body
     raise_message = if body.class == String
                       "Ошибка #{exception.response.code} с текстом #{JSON.parse(body)}"
                     else
                       "Ошибка #{exception}"
                     end
+
     raise raise_message
+  end
   end
 
   def compile_full_url(current_url)
     url + current_url
   end
-end
+# end

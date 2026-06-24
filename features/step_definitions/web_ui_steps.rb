@@ -3,15 +3,12 @@
 When(/^захожу на страницу "(.+?)"$/) do |url|
   visit url
   wait_loading_page
-  $logger.info("Страница #{url} загружена")
 end
 
 When(/^кликаю по кнопке с текстом "(.*?)"$/) do |button|
   link_first = find("//div[@id='page']//div//section//div[@data-hero-layer]//a['#{button}']")
   link_first.click
   wait_loading_page
-  current_url = page.current_url
-  $logger.info("Переход на страницу #{current_url} осуществлен")
 end
 
 When(/^скачиваю последний стабильный релиз$/) do

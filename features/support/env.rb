@@ -8,6 +8,7 @@ require_relative 'helpers/logger'
 require_relative 'helpers/class_extentions'
 require_relative 'helpers/download_helper'
 require_relative 'helpers/wait_loading_page'
+require_relative 'helpers/success_response'
 require 'fileutils'
 
 def browser_setup(browser = 'chrome')

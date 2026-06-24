@@ -24,12 +24,12 @@ end
 When(/^добавляю пользователя c логином ([^.]+(?:\.[^.]+)?) именем (\w+) фамилией (\w+) паролем ([\d\w@!#]+) статус active (-?\d+)$/) do
 |login, name, surname, password, active|
 
-  response = $rest_wrap.post('/users', login: login,
+$rest_wrap.post('/users', login: login,
                                        name: name,
                                        surname: surname,
                                        password: password,
                                        active: active)
-  $logger.info(response.inspect)
+  $logger.info("Пользователь с логин: #{login} имя: #{name} фамилия: #{surname} active: #{active} успешно добавлен" )
 rescue => e
   if e
     $logger.info("Пользователь не создан")
@@ -54,247 +54,155 @@ When(/^проверяю что пользователь c логином ([^.]+(
   end
 end
 
-
-
- When(/^добавляю пользователя с параметрами:$/) do |data_table|
-  user_data = data_table.raw
-
-  login = user_data[0][1]
-  name = user_data[1][1]
-  surname = user_data[2][1]
-  password = user_data[3][1]
-
-  step "добавляю пользователя c логином #{login} именем #{name} фамилией #{surname} паролем #{password}"
-end
-
-When(/^нахожу пользователя с логином (\w+\.\w+)$/) do |login|
-  step %(получаю информацию о пользователях)
-  if @scenario_data.users_id[login].nil?
-    @scenario_data.users_id[login] = find_user_id(users_information: @scenario_data
-                                                                         .users_full_info,
-                                                  user_login: login)
-  end
-
-  $logger.info("Найден пользователь #{login} с id:#{@scenario_data.users_id[login]}")
-end
-
 When(/^удаляю пользователя с логином (\w+(?:\.\w+)?) из списка пользователей$/) do |login|
   step %(получаю информацию о пользователях)
     user_data = @scenario_data.users_full_info.find { |user| user['login'] == login }
     user_id = user_data['id']
-    response = $rest_wrap.delete("/users/#{user_id}")
-    $logger.info(response.inspect)
+    $rest_wrap.delete("/users/#{user_id}")
+    $logger.info("Пользователь #{login} успешно удален")
   end
-
-When(/^изменяю у пользователя с логином (\w+\.\w+) имя фамилию пароль логин$/) do |login|
-  user_data = @scenario_data.users_full_info.find { |user| user['login'] == login }
-  user_id = user_data['id']
-  response = $rest_wrap.put("/users/#{user_id}", login: "QA.testing",
-                            name: 'leon',
-                            surname: 'kennedy',
-                            password: 'Qwerty123123',
-                            active: 0)
-  $logger.info(response.inspect)
-end
 
 When(/^добавляю пользователя c логином (\w+(?:\.\w+)?) паролем ([\d\w@!#]+) без дополнительных полей$/) do |login, password|
-  response = $rest_wrap.post('/users', login: login,
+  $rest_wrap.post('/users', login: login,
                              password: password)
-  $logger.info(response.inspect)
 rescue => e
   if e
-    $logger.info("Пользователь не создан")
+    $logger.info("Пользователь #{login} не создан status:#{e.message}")
   else
     raise("Пользователь добавлен")
   end
 end
 
-When(/^добавляю пользователя c логином (\w+(?:\.\w+)?) паролем ([\d\w@!#]+) с именем (\w+(?:\.\w+)?)$/) do |login, name, password|
-  response = $rest_wrap.post('/users', login: login,
+When(/^добавляю пользователя c логином (\w+(?:\.\w+)?) паролем ([\d\w@!#]+) без поля (name|surname|active)$/) do |login, password, variable, data_table|
+  user_data = data_table.raw.to_h
+  user_data.delete(variable)
+  $logger.info("Данные для создания пользователя (после удаления поля #{variable}): #{user_data.inspect}")
+  $rest_wrap.post('/users', login: login,
                              password: password,
-                             name: name)
-  $logger.info(response.inspect)
+                             **user_data)
 rescue => e
   if e
     $logger.info("Пользователь не создан")
   else
     raise("Пользователь добавлен")
   end
-end
+  end
 
-When(/^добавляю пользователя c логином (\w+(?:\.\w+)?) паролем ([\d\w@!#]+) с именем (\w+(?:\.\w+)?) с фамилией (\w+(?:\.\w+)?)$/) do
-|login, name, password, surname|
-  response = $rest_wrap.post('/users', login: login,
-                             password: password,
-                             name: name,
-                             surname: surname)
-  $logger.info(response.inspect)
-rescue => e
-  if e
-    $logger.info("Пользователь не создан")
-  else
-    raise("Пользователь добавлен")
-  end
-end
-
-When(/^добавляю пользователя c логином (\w+(?:\.\w+)?) паролем ([\d\w@!#]+) с фамилией (\w+(?:\.\w+)?) статус active ([\d\w@!#]+)$/) do
-|login, name, password, active|
-  response = $rest_wrap.post('/users', login: login,
-                             password: password,
-                             name: name,
-                             active: active)
-  $logger.info(response.inspect)
-rescue => e
-  if e
-    $logger.info("Пользователь не создан")
-  else
-    raise("Пользователь добавлен")
-  end
-end
-
-When(/^добавляю пользователя c логином (\w+(?:\.\w+)?) паролем ([\d\w@!#]+) с именем (\w+(?:\.\w+)?) статус active ([\d\w@!#]+)$/) do
-|login, name, password, active|
-  response = $rest_wrap.post('/users', login: login,
-                             password: password,
-                             name: name,
-                             active: active)
-  $logger.info(response.inspect)
-rescue => e
-  if e
-    $logger.info("Пользователь не создан")
-  else
-    raise("Пользователь добавлен")
-  end
-end
-
-When(/^добавляю пользователя c логином (\w+(?:\.\w+)?) паролем ([\d\w@!#]+) с фамилией (\w+(?:\.\w+)?)$/) do
-|login, surname, password|
-  response = $rest_wrap.post('/users', login: login,
-                             password: password,
-                             surname: surname)
-  $logger.info(response.inspect)
-rescue => e
-  if e
-    $logger.info("Пользователь не создан")
-  else
-    raise("Пользователь добавлен")
-  end
-end
-
-When(/^добавляю пользователя c логином (\w+(?:\.\w+)?) паролем ([\d\w@!#]+) статус active ([\d\w@!#]+)$/) do
-|login, password, active|
-  response = $rest_wrap.post('/users', login: login,
-                             password: password,
-                             active: active)
-  $logger.info(response.inspect)
-rescue => e
-  if e
-    $logger.info("Пользователь не создан")
-  else
-    raise("Пользователь добавлен")
-  end
-end
 
 When(/^добавляю пользователя (.+?) с (\d+) символами$/) do |variable, count|
-  login = "123456789012345678901234567890123456789012345"
-  login_error = "123456789012345678901234567890123456789012345"
-  name = "123456789012345678901234567890123456789012345"
-  name_error = "1234567890123456789012345678901234567890123456"
-  surname = "123456789012345678901234567890123456789012345"
-  surname_error = "1234567890123456789012345678901234567890123456"
-  password = "123456789012345678901234567890123456789012345"
-  password_error = "1234567890123456789012345678901234567890123456"
-  active = 127
-  if count == 56
-  case variable
-  when 'логин'
-    response = $rest_wrap.post('/users', login: login_error,
-                               password: password,
-                               name: name,
-                               surname: surname,
-                               active: active)
-    $logger.info(response.inspect)
-    $logger.error("Пользователь добавлен")
-  when 'имя'
-      response = $rest_wrap.post('/users', login: login,
-                                 password: password,
-                                 name: name_error,
-                                 surname: surname,
-                                 active: active)
-      $logger.info(response.inspect)
-      $logger.error("Пользователь добавлен")
-  when 'фамилия'
-      response = $rest_wrap.post('/users', login: login,
-                                password: password,
-                                name: name,
-                                surname: surname_error,
-                                active: active)
-      $logger.info(response.inspect)
-      $logger.error("Пользователь добавлен")
-  when 'пароль'
-      response = $rest_wrap.post('/users', login: login,
-                                password: password_error,
-                                name: name,
-                                surname: surname,
-                                active: active)
-      $logger.info(response.inspect)
-      $logger.error("Пользователь добавлен")
-  end
-  else
-    response = $rest_wrap.post('/users', login: login,
-                               password: password,
-                               name: name,
-                               surname: surname,
-                               active: active)
-    $logger.info(response.inspect)
-    $logger.info("Пользователь добавлен")
-end
+  fields = generate_user_random_fields(variable, count)
+
+  $rest_wrap.post('/users', login: fields[:login],
+                               password: fields[:password],
+                               name: fields[:name],
+                               surname: fields[:surname],
+                               active: fields[:active])
+    $logger.info("Пользователь с логином #{fields [:login]} именем #{fields [:name]} фамилией #{fields [:surname]} паролем #{fields [:password]} добавлен")
 rescue => e
-  if e.message.include?('400')
-    $logger.info("Пользователь не создан")
-  else
-    raise e
+    if e && variable == 'логин'
+      $logger.info("Пользователь с логином #{fields [:login]} не создан")
+      elsif e && variable == 'имя'
+      $logger.info("Пользователь с именем #{fields [:name]} не создан")
+      elsif e && variable == 'фамилия'
+      $logger.info("Пользователь с фамилией #{fields [:surname]} не создан")
+      elsif e && variable == 'пароль'
+      $logger.info("Пользователь с паролем #{fields [:password]} не создан")
+    else
+      raise e
+    end
   end
-end
 
 When(/^проверяю (отсутствие|наличие) пользователя с (.+?) (\d+) символов в списке пользователей$/) do |present, variable, count|
-  login = "123456789012345678901234567890123456789012345"
-  login_error = "1234567890123456789012345678901234567890123456"
-step %(получаю информацию о пользователях)
-  if variable == 'логин' && count == 56
-    logins_from_site = @scenario_data.users_full_info.map { |f| f.try(:[], 'login') }
-    login_presents = logins_from_site.include?(login_error)
-    if login_presents
-      raise("Логин #{login_error} присутствует в списке пользователей")
+    login = @scenario_data.last_generated[:login]
+    name = @scenario_data.last_generated[:name]
+    surname = @scenario_data.last_generated[:surname]
+    password = @scenario_data.last_generated[:password]
+
+  step %(получаю информацию о пользователях)
+  logins_from_site = @scenario_data.users_full_info.map { |f| f.try(:[], 'login') }
+  login_presents = logins_from_site.include?(login)
+
+    case variable
+    when 'логин'
+      if present == 'наличие'
+               if login_presents
+                 $logger.info("Логин #{login} присутствует в списке пользователей")
+               else
+                 raise("Логин #{login} отсутствует в списке пользователей")
+               end
+      else
+      if login_presents
+       raise("Логин #{login} присутствует в списке пользователей")
+      else
+       $logger.info("Логин #{login} отсутствует в списке пользователей")
+      end
+      end
+    when 'имя'
+      if present == 'наличие'
+        if login_presents
+          $logger.info("Логин #{login} с именем #{name} присутствует в списке пользователей")
+        else
+          raise("Логин #{login} с именем #{name} отсутствует в списке пользователей")
+        end
+      else
+        if login_presents
+          raise("Логин #{login} с именем #{name} присутствует в списке пользователей")
+        else
+          $logger.info("Логин #{login} с именем #{name} отсутствует в списке пользователей")
+        end
+      end
+    when 'фамилия'
+    if present == 'наличие'
+      if login_presents
+        $logger.info("Логин #{login} с фамилией #{surname} присутствует в списке пользователей")
+      else
+        raise("Логин #{login} с фамилией #{surname} отсутствует в списке пользователей")
+      end
     else
-      $logger.info("Логин #{login_error} отсутствует в списке пользователей")
+      if login_presents
+        raise("Логин #{login} с фамилией #{surname} присутствует в списке пользователей")
+      else
+        $logger.info("Логин #{login} с фамилией #{surname} отсутствует в списке пользователей")
+      end
     end
-  elsif variable != 'логин' && count == 56
-    logins_from_site = @scenario_data.users_full_info.map { |f| f.try(:[], 'login') }
-    login_presents = logins_from_site.include?(login)
-    if login_presents
-      raise("Логин #{login} присутствует в списке пользователей")
+    when 'пароль'
+      if present == 'наличие'
+        if login_presents
+          $logger.info("Логин #{login} с паролем #{password} присутствует в списке пользователей")
+        else
+          raise("Логин #{login} с паролем #{password} отсутствует в списке пользователей")
+        end
+      else
+        if login_presents
+          raise("Логин #{login} с паролем #{password} присутствует в списке пользователей")
+        else
+          $logger.info("Логин #{login} с паролем #{password} отсутствует в списке пользователей")
+        end
+      end
     else
-      $logger.info("Логин #{login} отсутствует в списке пользователей")
+      if present == 'наличие'
+        if login_presents
+          $logger.info("Логин #{login} присутствует в списке пользователей")
+        else
+          raise("Логин #{login} отсутствует в списке пользователей")
+        end
+      else
+        if login_presents
+          raise("Логин #{login} присутствует в списке пользователей")
+        else
+          $logger.info("Логин #{login} отсутствует в списке пользователей")
+        end
+      end
     end
-  else
-    logins_from_site = @scenario_data.users_full_info.map { |f| f.try(:[], 'login') }
-    login_presents = logins_from_site.include?(login)
-    if login_presents
-      $logger.info("Логин #{login} присутствует в списке пользователей")
-    else
-      raise("Логин #{login} отсутствует в списке пользователей")
     end
-  end
-end
 
 When(/^удаляю созданного пользователя$/) do
 step %(получаю информацию о пользователях)
-login = "123456789012345678901234567890123456789012345"
+login = @scenario_data.last_generated[:login]
 user_data = @scenario_data.users_full_info.find { |user| user['login'] == login }
 user_id = user_data['id']
-response = $rest_wrap.delete("/users/#{user_id}")
-$logger.info(response.inspect)
+$rest_wrap.delete("/users/#{user_id}")
+$logger.info("Пользователь #{login} успешно удален")
 end
 
 When(/^проверяю что пользователь (\w+\.\w+) содержит active = (-?\d+)$/) do |login, active|
@@ -302,32 +210,31 @@ When(/^проверяю что пользователь (\w+\.\w+) содерж�
   user_data = @scenario_data.users_full_info.find { |user| user['login'] == login }
   user_active = user_data['active']
   if user_active == active
-    $logger.info('Данные совпадают')
+    $logger.info("У пользователя #{login} active = #{user_active}")
   else
-    $logger.error('Данные не совпадают')
+    $logger.error("У пользователя #{login} active = #{user_active}")
   end
 end
 
-When(/^удаляю созданных пользователей (\w+\.\w+) (\w+\.\w+) (\w+\.\w+) (\w+\.\w+) (\w+\.\w+)$/) do |login1, login2, login3, login4, login5|
-  login_item = [login1, login2, login3, login4, login5]
+When(/^удаляю созданных пользователей (\w+\.\w+)$/) do |login|
+  login_item = [login]
   step %(получаю информацию о пользователях)
   login_item.each { |login|
-    user_data = @scenario_data.users_full_info.find { |user| user['login'] == login }
+    user_data = @scenario_data.users_full_info.find{ |user| user['login'] == login }
     user_id = user_data['id']
-    response = $rest_wrap.delete("/users/#{user_id}")
-    $logger.info(response.inspect)
-  } #можно из списка логинов делать массив и потом можно удалять любое количество пользователей
+    $rest_wrap.delete("/users/#{user_id}")
+    $logger.info("Пользователь #{login} успешно удален")
+  }
 end
 
 When(/^изменяю у пользователя с логином (\w+(?:\.\w+)?) имя на (\w+(?:\.\w+)?) фамилию на (\w+) логин на (\w+(?:\.\w+)?) active на (-?\d+)$/) do
 |login, name, surname, login_edit, active|
   step %(получаю информацию о пользователях)
-  user_data = @scenario_data.users_full_info.find { |user| user['login'] == login }
+  user_data = @scenario_data.users_full_info.find{ |user| user['login'] == login }
   user_id = user_data['id']
-  puts user_id
-  response = $rest_wrap.put("/users/#{user_id}", login: login_edit,
+  $rest_wrap.put("/users/#{user_id}", login: login_edit,
                             name: name,
                             surname:  surname,
                             active: active)
-  $logger.info(response.inspect)
+  $logger.info("Пользователь с логином #{login} успешно изменен на логин #{login_edit}, имя на #{name}, фамилия на #{surname}, active на #{active}")
 end
